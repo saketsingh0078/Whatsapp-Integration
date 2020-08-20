@@ -37,11 +37,8 @@ public class MainActivity extends AppCompatActivity {
             {
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_VIEW);
-
-                //here you have to pass whatsApp contact  number  as  number..
                 String number = phoneNumber.getText().toString();
-                String name= getContactName( number, MainActivity.this);
-                int videoCall=getContactIdForWhatsAppVideoCall(name,MainActivity.this);
+                int videoCall=getContactIdForWhatsAppVideoCall(number,MainActivity.this);
                 if (videoCall!=0)
                 {
                     intent.setDataAndType(Uri.parse("content://com.android.contacts/data/" +videoCall),
@@ -58,14 +55,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                String mimeString = "vnd.android.cursor.item/vnd.com.whatsapp.voip.call";
-
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_VIEW);
-
                 String number = phoneNumber.getText().toString();
-                String name= getContactName(number , MainActivity.this);
-                int whatsappcall=getContactIdForWhatsAppCall(name,MainActivity.this);
+                int whatsappcall=getContactIdForWhatsAppCall(number,MainActivity.this);
                 if (whatsappcall!=0) {
                     intent.setDataAndType(Uri.parse("content://com.android.contacts/data/" +whatsappcall),
                             "vnd.android.cursor.item/vnd.com.whatsapp.voip.call");
@@ -75,37 +68,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
     }
 
-    public String getContactName(final String phoneNumber, Context context)
+    public  int getContactIdForWhatsAppVideoCall(String contactNumber,Context context)
     {
-        Uri uri=Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(phoneNumber));
-
-        String[] projection = new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME};
-
-        String contactName="";
-        Cursor cursor=context.getContentResolver().query(uri,projection,null,null,null);
-
-        if (cursor != null) {
-            if(cursor.moveToFirst()) {
-                contactName=cursor.getString(0);
-            }
-            cursor.close();
-        }
-
-        return contactName;
-    }
-
-
-    public  int getContactIdForWhatsAppVideoCall(String name,Context context)
-    {
-        Cursor  cursor = getContentResolver().query(
-                ContactsContract.Data.CONTENT_URI,
-                new String[]{ContactsContract.Data._ID},
-                ContactsContract.Data.DISPLAY_NAME + "=? and "+ContactsContract.Data.MIMETYPE+ "=?",
-                new String[] {name,"vnd.android.cursor.item/vnd.com.whatsapp.video.call"},
-                ContactsContract.Contacts.DISPLAY_NAME);
+        Cursor cursor = context.getContentResolver ().query (
+                        ContactsContract.Data.CONTENT_URI,
+                        new String [] { ContactsContract.Data._ID },
+                        ContactsContract.RawContacts.ACCOUNT_TYPE + " = 'com.whatsapp' " +
+                                "AND " + ContactsContract.Data.MIMETYPE + " = 'vnd.android.cursor.item/vnd.com.whatsapp.video.call' " +
+                                "AND " + ContactsContract.CommonDataKinds.Phone.NUMBER + " LIKE '%" + contactNumber + "%'",
+                        null,
+                        ContactsContract.Contacts.DISPLAY_NAME
+                );
 
         if (cursor.getCount()>0)
         {
@@ -120,20 +95,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public  int getContactIdForWhatsAppCall(String name,Context context)
+    public  int getContactIdForWhatsAppCall(String contactNumber,Context context)
     {
-        Cursor cursor = getContentResolver().query(
-                ContactsContract.Data.CONTENT_URI,
-                new String[]{ContactsContract.Data._ID},
-                ContactsContract.Data.DISPLAY_NAME + "=? and "+ContactsContract.Data.MIMETYPE+ "=?",
-                new String[] {name,"vnd.android.cursor.item/vnd.com.whatsapp.voip.call"},
-                ContactsContract.Contacts.DISPLAY_NAME);
+        Cursor cursor = context.getContentResolver ()
+                .query (
+                        ContactsContract.Data.CONTENT_URI,
+                        new String [] { ContactsContract.Data._ID },
+                        ContactsContract.RawContacts.ACCOUNT_TYPE + " = 'com.whatsapp' " +
+                                "AND " + ContactsContract.Data.MIMETYPE + " = 'vnd.android.cursor.item/vnd.com.whatsapp.voip.call' " +
+                                "AND " + ContactsContract.CommonDataKinds.Phone.NUMBER + " LIKE '%" + contactNumber + "%'",
+                        null,
+                        ContactsContract.Contacts.DISPLAY_NAME
+                );
 
         if (cursor.getCount()>0)
         {
             cursor.moveToNext();
             int phoneContactID=  cursor.getInt(cursor.getColumnIndex(ContactsContract.Data._ID));
-            System.out.println("9999999999999999          name  "+name+"      id    "+phoneContactID);
             return phoneContactID;
         }
         else
